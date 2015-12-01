@@ -1,4 +1,4 @@
-GetDepthKinect1
+GetDepthKinect2
 ---------------
 
 Kinect v1, Kinect v2, DepthSense DS325/311 からカラーとデプスを取得するサンプル
@@ -32,11 +32,11 @@ Kinect v1, Kinect v2, DepthSense DS325/311 からカラーとデプスを取得�
 * 取得したカラーとデプスは OpenGL のテクスチャに格納します。
 * カラーのサンプリングに使うテクスチャ座標も計算します。
 
-### KinectV1 クラスの使い方
+### KinectV2 クラスの使い方
 
-* KinectV1 クラスのオブジェクトを作ってください。
-* 一応、マルチセンサに対応してみましたが、テストしていません。
-* getActivated() メソッドは使用されている Kinect の数を返します。
+* KinectV2 クラスのオブジェクトを作ってください。
+* Kinect v2 は一台の PC につき一台しか使えません。
+* getActivated() メソッドは Kinect v2 が使えれば 1 を返します。
 * これが 0 なら Kinect の起動に失敗してます。
 * getDepth() メソッドを呼ぶとデプスをテクスチャに転送し、そのテクスチャを bind します。
 * この時、同時にカラーのサンプリングに使うテクスチャ座標も計算します。

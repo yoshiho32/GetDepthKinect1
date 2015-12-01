@@ -1,5 +1,5 @@
 //
-// Kinect (v1) のデプスデータ取得
+// Kinect (v2) のデプスマップ取得
 //
 
 // 標準ライブラリ
@@ -9,7 +9,7 @@
 #include "Window.h"
 
 // センサ関連の処理
-#include "KinectV1.h"
+#include "KinectV2.h"
 
 // 描画に用いるメッシュ
 #include "Mesh.h"
@@ -52,7 +52,7 @@ int main()
   }
 
   // 深度センサを有効にする
-  KinectV1 sensor;
+  KinectV2 sensor;
   if (sensor.getActivated() == 0)
   {
     // センサが使えなかった
