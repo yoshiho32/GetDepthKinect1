@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\OpenCV.2.4.11\build\native\OpenCV.props" Condition="Exists('packages\OpenCV.2.4.11\build\native\OpenCV.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -22,6 +23,7 @@
     <ProjectGuid>{FCC72825-4B1A-4951-9AF2-6A41993810A8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>GetDepthKinect1</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -169,13 +171,25 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="bilateral.frag" />
     <None Include="normal.frag" />
+    <None Include="packages.config" />
     <None Include="position.frag" />
     <None Include="rectangle.vert" />
+    <None Include="refraction.frag" />
+    <None Include="refraction.vert" />
     <None Include="simple.frag" />
     <None Include="simple.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\OpenCV.2.4.11\build\native\OpenCV.targets" Condition="Exists('packages\OpenCV.2.4.11\build\native\OpenCV.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\OpenCV.2.4.11\build\native\OpenCV.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenCV.2.4.11\build\native\OpenCV.props'))" />
+    <Error Condition="!Exists('packages\OpenCV.2.4.11\build\native\OpenCV.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\OpenCV.2.4.11\build\native\OpenCV.targets'))" />
+  </Target>
 </Project>
