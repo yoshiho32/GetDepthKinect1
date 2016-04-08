@@ -5,6 +5,9 @@
 // 標準ライブラリ
 #include <Windows.h>
 
+// OpenCV
+#include <opencv2/highgui/highgui.hpp>
+
 // ウィンドウ関連の処理
 #include "Window.h"
 
