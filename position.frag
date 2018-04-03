@@ -21,16 +21,57 @@ in vec2 texcoord;
 // フレームバッファに出力するデータ
 layout (location = 0) out vec3 position;
 
-// デプス値をスケーリングする
-float s(in float z)
+//閾値
+const float threshold = 0.1 * MILLIMETER;
+
+//分散
+const float variance = 0.5;
+
+// 重み付き画素数の合計と重みの合計を求める
+vec2 f(const in vec2 base, const in float c, const in float w)
 {
-  return z == 0.0 ? DEPTH_MAXIMUM : z * DEPTH_SCALE;
+  float d = c - base.r;
+  float e = exp(-0.5 * d * d / variance) * w;
+  return vec2(c * e, 1.0) * step(threshold, c * e);
 }
 
-void main(void)
+// 重み付き平均をもとmる
+void main()
 {
-  // デプス値を取り出す
-  float z = s(texture(depth, texcoord).r);
+  vec2 zsum = vec2(texture(depth, texcoord).r ,1.0) * step(threshold, texture(depth, texcoord).r);
+  vec2 base = zsum;
+  
+
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2, -2)).r, 0.018315639);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1, -2)).r, 0.082084999);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 0, -2)).r, 0.135335283);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1, -2)).r, 0.082084999);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2, -2)).r, 0.018315639);
+  
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2, -1)).r, 0.082084999);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1, -1)).r, 0.367879441);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 0, -1)).r, 0.60653066);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1, -1)).r, 0.367879441);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2, -1)).r, 0.082084999);
+  
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2,  0)).r, 0.135335283);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1,  0)).r, 0.60653066);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1,  0)).r, 0.60653066);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2,  0)).r, 0.135335283);
+  
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2,  1)).r, 0.082084999);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1,  1)).r, 0.367879441);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 0,  1)).r, 0.60653066);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1,  1)).r, 0.367879441);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2,  1)).r, 0.082084999);
+  
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2,  2)).r, 0.018315639);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1,  2)).r, 0.082084999);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 0,  2)).r, 0.135335283);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1,  2)).r, 0.082084999);
+  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2,  2)).r, 0.018315639);
+
+  float z = zsum.g > 0.0 ? zsum.r * DEPTH_SCALE / zsum.g : DEPTH_MAXIMUM;
 
   // デプス値からカメラ座標値を求める
   position = vec3((texcoord - 0.5) * scale * z, z);
