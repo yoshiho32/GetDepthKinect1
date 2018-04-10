@@ -14,7 +14,6 @@ const vec2 scale = vec2(
 
 // テクスチャ
 layout (location = 0) uniform sampler2D depth;
-//入力は0 ~ 8000...?
 
 // テクスチャ座標
 in vec2 texcoord;
@@ -22,69 +21,95 @@ in vec2 texcoord;
 // フレームバッファに出力するデータ
 layout (location = 0) out vec3 position;
 
-//閾値
+// 閾値
 const float threshold = 0.1 * MILLIMETER;
 
-//分散
-const float variance =  0.5;
+//分散 -- 正確に指定するべきかも
+const float variance = 0.05 * MILLIMETER;
 
-// 重み付き画素数の合計と重みの合計を求める
-vec2 f(const in vec2 base, const in float c, const in float w)
+// 閾値処理
+vec2 f(const in float z)
 {
-  //dにずらした点の座標値から元の点のデプス値を引く(中心との色の差)
-  float d = c - base.r;
+  return vec2(z, 1.0) * step(threshold, z);
+}
 
-  //ガウス分布による反映率を設定
+// 重み付き画素値の合計と重みの合計を求める
+// 現在バグ発生中。dの値がイカレた値になることにより中央まで飛んできてる
+// 定数を入れるとそれっぽくなる
+// もしかしたら分散との兼ね合いかもしれないなぁと思いつつ
+// そもそも分散はどういう値になるんかなというのを確認必要
+
+//base : 注目点 --- c : 比較先の点    ---  w : ガウシアンフィルタを掛けたときの参照値
+vec2 Bf(const in vec2 base, const in vec4 c, const in float w)
+{
+
+  float d = c.r - base.r;//バグの元っぽい
+
+  //w(p,q) = exp((p-q)^2 / (2*variance)) * Gussian
   float e = exp(-0.5 * d * d / variance) * w;
+  float z = c.r * e;
 
   //もとの画素に反映率をかけて、その値が閾値未満であれば0にする。
   //2つ目の値が0になるのでそれで有効値かどうか判定
-  return vec2(c * e, 1.0) * step(threshold, c * e);
+  return f(z);
 }
 
-// 重み付き平均をもとmる
 void main()
 {
+
   //着目する点の値をそのまんまの値を設定
-  vec2 zsum = vec2(texture(depth, texcoord).r ,1.0);
+  vec2 zsum = f(texture(depth, texcoord).r);
   //着目点を元データして登録
   vec2 base = zsum;
 
-  //周囲5*5マスに対して重み付き画素数の合計と重みの合計を求める
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2, -2)).r, 0.018315639);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1, -2)).r, 0.082084999);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 0, -2)).r, 0.135335283);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1, -2)).r, 0.082084999);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2, -2)).r, 0.018315639);
+    //周囲5*5マスに対して重み付き画素数の合計と重みの合計を求める
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-2, -2)), 0.018315639);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-1, -2)), 0.082084999);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 0, -2)), 0.135335283);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 1, -2)), 0.082084999);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 2, -2)), 0.018315639);
   
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2, -1)).r, 0.082084999);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1, -1)).r, 0.367879441);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 0, -1)).r, 0.60653066);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1, -1)).r, 0.367879441);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2, -1)).r, 0.082084999);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-2, -1)), 0.082084999);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-1, -1)), 0.367879441);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 0, -1)), 0.60653066);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 1, -1)), 0.367879441);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 2, -1)), 0.082084999);
   
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2,  0)).r, 0.135335283);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1,  0)).r, 0.60653066);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1,  0)).r, 0.60653066);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2,  0)).r, 0.135335283);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-2,  0)), 0.135335283);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-1,  0)), 0.60653066);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 1,  0)), 0.60653066);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 2,  0)), 0.135335283);
   
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2,  1)).r, 0.082084999);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1,  1)).r, 0.367879441);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 0,  1)).r, 0.60653066);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1,  1)).r, 0.367879441);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2,  1)).r, 0.082084999);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-2,  1)), 0.082084999);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-1,  1)), 0.367879441);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 0,  1)), 0.60653066);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 1,  1)), 0.367879441);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 2,  1)), 0.082084999);
   
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-2,  2)).r, 0.018315639);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2(-1,  2)).r, 0.082084999);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 0,  2)).r, 0.135335283);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 1,  2)).r, 0.082084999);
-  zsum += f(base, textureOffset(depth, texcoord, ivec2( 2,  2)).r, 0.018315639);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-2,  2)), 0.018315639);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2(-1,  2)), 0.082084999);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 0,  2)), 0.135335283);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 1,  2)), 0.082084999);
+  zsum += Bf(base, textureOffset(depth, texcoord, ivec2( 2,  2)), 0.018315639);
+  
+  /*
+  //比較用3*3のフィルター
+  zsum += f(textureOffset(depth, texcoord, ivec2(-1, -1)).r);
+  zsum += f(textureOffset(depth, texcoord, ivec2( 0, -1)).r);
+  zsum += f(textureOffset(depth, texcoord, ivec2( 1, -1)).r);
+  
+  zsum += f(textureOffset(depth, texcoord, ivec2(-1,  0)).r);
+  zsum += f(textureOffset(depth, texcoord, ivec2( 1,  0)).r);
+  
+  zsum += f(textureOffset(depth, texcoord, ivec2(-1,  1)).r);
+  zsum += f(textureOffset(depth, texcoord, ivec2( 0,  1)).r);
+  zsum += f(textureOffset(depth, texcoord, ivec2( 1,  1)).r);
+  */
 
   //zsumの2つ目の値が0→有効値がなかったため遠くに飛ばす
   //でなければzsumの値を足し合わせた数で割って（平均）スケールに合わせる
   float z = zsum.g > 0.0 ? zsum.r * DEPTH_SCALE / zsum.g : DEPTH_MAXIMUM;
 
   // デプス値からカメラ座標値を求める
-  // z → (-1.0) に変更。ここが原因だった臭い
-  position = vec3((texcoord - 0.5) * scale * (-1.0) , z);
+  position = vec3((texcoord - 0.5) * scale * z, z);
 }
