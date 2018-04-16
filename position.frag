@@ -7,9 +7,6 @@
 #define DEPTH_SCALE (-65535.0 * MILLIMETER)
 #define DEPTH_MAXIMUM (-10.0)
 
-#define PI 3.14159
-#define KERNEL_SIZE 5
-
 // スケール
 const vec2 scale = vec2(
   1.546592,
@@ -32,123 +29,64 @@ const float threshold = 0.1 * MILLIMETER;
 const float variance = 0.05;
 
 // 閾値処理
-vec2 f(const in float z)
+vec2 f2(const in float z)
 {
   return vec2(z, 1.0) * step(threshold, z);
 }
 
-//(x,y)の位置の値を出して、その値があるなら分母に追加
-void f3(inout float wsum, const in int x ,const in int y){
-  vec2 z = f(texture(depth, texcoord + vec2(x, y)).r);
-  float xy = -1 * (x*x + y*y)/2.0; 
-  wsum += 1 / ( 2 * PI ) * exp(xy) * z.g;
-}
-
-//有効値に対して分母wsumで割って、現在の位置をもとにした重みをかける
-void f4(in float wsum, inout float csum, const in int x ,const in int y){
-
-  vec2 z = f(texture(depth, texcoord + vec2(x, y)).r);
-  float xy = -1 * (x*x + y*y) /2.0;
-  float tmp = 1 / ( 2 * PI ) * exp(xy) / wsum;
-
-  csum += tmp * z.r *z.g;
-
+// 重み付き画素値の合計と重みの合計を求める
+void f(inout vec3 csum, inout vec3 wsum, const in vec3 base, const in vec4 c, const in float w)
+{
+  vec3 d = c.xyz - base;
+  vec3 e = exp(-0.5 * d * d / variance) * w;
+  csum += c.xyz * e * step(threshold, c.x) * step(threshold, base.r);
+  wsum += e * step(threshold, c.x) * step(threshold, base.r);
 }
 
 // 重み付き平均を求める
 void main()
 {
-  float wsum = 0;
-  float csum = 0;
 
-  f3(wsum, -2, -2);
-  f3(wsum, -1, -2);
-  f3(wsum,  0, -2);
-  f3(wsum,  1, -2);
-  f3(wsum,  2, -2);
-  f3(wsum, -2, -1);
-  f3(wsum, -1, -1);
-  f3(wsum,  0, -1);
-  f3(wsum,  1, -1);
-  f3(wsum,  2, -1);
-  f3(wsum, -2,  0);
-  f3(wsum, -1,  0);
-  f3(wsum,  0,  0);
-  f3(wsum,  1,  0);
-  f3(wsum,  2,  0);
-  f3(wsum, -2,  1);
-  f3(wsum, -1,  1);
-  f3(wsum,  0,  1);
-  f3(wsum,  1,  1);
-  f3(wsum,  2,  1);
-  f3(wsum, -2,  2);
-  f3(wsum, -1,  2);
-  f3(wsum,  0,  2);
-  f3(wsum,  1,  2);
-  f3(wsum,  2,  2);
+  vec3 csum = texture(depth, texcoord).xyz;
+  vec3 wsum = vec3(1.0);
+  vec3 base = csum;
+  
+  int Miss_num = 0;
 
-    
-  f4(wsum, csum, -2, -2);
-  f4(wsum, csum, -1, -2);
-  f4(wsum, csum,  0, -2);
-  f4(wsum, csum,  1, -2);
-  f4(wsum, csum,  2, -2);
-  f4(wsum, csum, -2, -1);
-  f4(wsum, csum, -1, -1);
-  f4(wsum, csum,  0, -1);
-  f4(wsum, csum,  1, -1);
-  f4(wsum, csum,  2, -1);
-  f4(wsum, csum, -2,  0);
-  f4(wsum, csum, -1,  0);
-  f4(wsum, csum,  0,  0);
-  f4(wsum, csum,  1,  0);
-  f4(wsum, csum,  2,  0);
-  f4(wsum, csum, -2,  1);
-  f4(wsum, csum, -1,  1);
-  f4(wsum, csum,  0,  1);
-  f4(wsum, csum,  1,  1);
-  f4(wsum, csum,  2,  1);
-  f4(wsum, csum, -2,  2);
-  f4(wsum, csum, -1,  2);
-  f4(wsum, csum,  0,  2);
-  f4(wsum, csum,  1,  2);
-  f4(wsum, csum,  2,  2);
- 
-  float z = csum > 0 ? csum * DEPTH_SCALE : DEPTH_MAXIMUM;
-  //z = z < 10 ? DEPTH_MAXIMUM : z;
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-2, -2)), 0.018315639);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-1, -2)), 0.082084999);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 0, -2)), 0.135335283);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 1, -2)), 0.082084999);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 2, -2)), 0.018315639);
+
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-2, -1)), 0.082084999);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-1, -1)), 0.367879441);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 0, -1)), 0.60653066);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 1, -1)), 0.367879441);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 2, -1)), 0.082084999);
+
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-2,  0)), 0.135335283);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-1,  0)), 0.60653066);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 1,  0)), 0.60653066);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 2,  0)), 0.135335283);
+
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-2,  1)), 0.082084999);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-1,  1)), 0.367879441);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 0,  1)), 0.60653066);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 1,  1)), 0.367879441);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 2,  1)), 0.082084999);
+
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-2,  2)), 0.018315639);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2(-1,  2)), 0.082084999);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 0,  2)), 0.135335283);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 1,  2)), 0.082084999);
+  f(csum, wsum, base, textureOffset(depth, texcoord, ivec2( 2,  2)), 0.018315639);
+
+  vec3 smoothed = csum / wsum;
+
+  float z = smoothed.r > 0 ? smoothed.r * DEPTH_SCALE : DEPTH_MAXIMUM;
+
   // デプス値からカメラ座標値を求める
-  position = vec3(-(texcoord - 0.5) * scale * z, z);
-  //position = vec3( -texcoord ,stat.g);
+  position = vec3((texcoord - 0.5 )* scale * z, z);
 
 }
-
-
-
-
-
-
-/*
-//カーネル内の分散を求める
-vec3 Dispersion(){
-  
-  //カーネル内の平均値
-  vec2 base =  f(texture(depth, texcoord + vec2(-2, -2)).r) + f(texture(depth, texcoord + vec2(-1, -2)).r) + f(texture(depth, texcoord + vec2( 0, -2)).r) + f(texture(depth, texcoord + vec2( 1, -2)).r) + f(texture(depth, texcoord + vec2( 2, -2)).r) + 
-               f(texture(depth, texcoord + vec2(-2, -1)).r) + f(texture(depth, texcoord + vec2(-1, -1)).r) + f(texture(depth, texcoord + vec2( 0, -1)).r) + f(texture(depth, texcoord + vec2( 1, -1)).r) + f(texture(depth, texcoord + vec2( 2, -1)).r) + 
-			   f(texture(depth, texcoord + vec2(-2,  0)).r) + f(texture(depth, texcoord + vec2(-1,  0)).r) + f(texture(depth, texcoord + vec2( 0,  0)).r) + f(texture(depth, texcoord + vec2( 1,  0)).r) + f(texture(depth, texcoord + vec2( 2,  0)).r) +
-			   f(texture(depth, texcoord + vec2(-2,  1)).r) + f(texture(depth, texcoord + vec2(-1,  1)).r) + f(texture(depth, texcoord + vec2( 0,  1)).r) + f(texture(depth, texcoord + vec2( 1,  1)).r) + f(texture(depth, texcoord + vec2( 2,  1)).r) + 
-			   f(texture(depth, texcoord + vec2(-2,  2)).r) + f(texture(depth, texcoord + vec2(-1,  2)).r) + f(texture(depth, texcoord + vec2( 0,  2)).r) + f(texture(depth, texcoord + vec2( 1,  2)).r) + f(texture(depth, texcoord + vec2( 2,  2)).r);
-  float avg = base.r / base.g;
-
-  //分散
-  float result = texture(depth, texcoord + vec2( -2, -2)).r*texture(depth, texcoord + vec2( -2, -2)).r + texture(depth, texcoord + vec2( -1, -2)).r*texture(depth, texcoord + vec2( -1, -2)).r + texture(depth, texcoord + vec2( -1, -2)).r*texture(depth, texcoord + vec2( -1, -2)).r + texture(depth, texcoord + vec2(  0, -2)).r*texture(depth, texcoord + vec2(  0, -2)).r + texture(depth, texcoord + vec2( 1, -2)).r*texture(depth, texcoord + vec2( 1, -2)).r + texture(depth, texcoord + vec2( 2, -2)).r*texture(depth, texcoord + vec2( 2, -2)).r + 
-				 texture(depth, texcoord + vec2( -2, -1)).r*texture(depth, texcoord + vec2( -2, -1)).r + texture(depth, texcoord + vec2( -1, -1)).r*texture(depth, texcoord + vec2( -1, -1)).r + texture(depth, texcoord + vec2(  0, -1)).r*texture(depth, texcoord + vec2(  0, -1)).r + texture(depth, texcoord + vec2( 1, -1)).r*texture(depth, texcoord + vec2( 1, -1)).r + texture(depth, texcoord + vec2( 2, -1)).r*texture(depth, texcoord + vec2( 2, -1)).r + 
-			 	 texture(depth, texcoord + vec2( -2,  0)).r*texture(depth, texcoord + vec2( -2,  0)).r + texture(depth, texcoord + vec2( -1,  0)).r*texture(depth, texcoord + vec2( -1,  0)).r + texture(depth, texcoord + vec2(  0,  0)).r*texture(depth, texcoord + vec2(  0,  0)).r + texture(depth, texcoord + vec2( 1,  0)).r*texture(depth, texcoord + vec2( 1,  0)).r + texture(depth, texcoord + vec2( 2,  0)).r*texture(depth, texcoord + vec2( 2,  0)).r +
-				 texture(depth, texcoord + vec2( -2,  1)).r*texture(depth, texcoord + vec2( -2,  1)).r + texture(depth, texcoord + vec2( -1,  1)).r*texture(depth, texcoord + vec2( -1,  1)).r + texture(depth, texcoord + vec2(  0,  1)).r*texture(depth, texcoord + vec2(  0,  1)).r + texture(depth, texcoord + vec2( 1,  1)).r*texture(depth, texcoord + vec2( 1,  1)).r + texture(depth, texcoord + vec2( 2,  1)).r*texture(depth, texcoord + vec2( 2,  1)).r + 
-			 	 texture(depth, texcoord + vec2( -2,  2)).r*texture(depth, texcoord + vec2( -2,  2)).r + texture(depth, texcoord + vec2( -1,  2)).r*texture(depth, texcoord + vec2( -1,  2)).r + texture(depth, texcoord + vec2(  0,  2)).r*texture(depth, texcoord + vec2(  0,  2)).r + texture(depth, texcoord + vec2( 1,  2)).r*texture(depth, texcoord + vec2( 1,  2)).r + texture(depth, texcoord + vec2( 2,  2)).r*texture(depth, texcoord + vec2( 2,  2)).r;
-  
-  exp(KERNEL_SIZE*KERNEL_SIZE / result);
-
-  return vec3(result, avg, base.g);
-
-}
-*/
