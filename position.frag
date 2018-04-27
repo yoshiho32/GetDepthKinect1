@@ -54,35 +54,35 @@ void main()
   vec3 base = texture(color, colorcoord).xyz;
   
   int Miss_num = 0;
-
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-2, -2)), 0.018315639);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-1, -2)), 0.082084999);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 0, -2)), 0.135335283);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 1, -2)), 0.082084999);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 2, -2)), 0.018315639);
-
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-2, -1)), 0.082084999);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-1, -1)), 0.367879441);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 0, -1)), 0.60653066);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 1, -1)), 0.367879441);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 2, -1)), 0.082084999);
   
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-2,  0)), 0.135335283);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-1,  0)), 0.60653066);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 1,  0)), 0.60653066);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 2,  0)), 0.135335283);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-2, -2)), 0.018315639);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-1, -2)), textureOffset(depth, texcoord, ivec2(-1, -2)), 0.082084999);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 0, -2)), textureOffset(depth, texcoord, ivec2( 0, -2)), 0.135335283);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 1, -2)), textureOffset(depth, texcoord, ivec2( 1, -2)), 0.082084999);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 2, -2)), textureOffset(depth, texcoord, ivec2( 2, -2)), 0.018315639);
 
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-2,  1)), 0.082084999);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-1,  1)), 0.367879441);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 0,  1)), 0.60653066);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 1,  1)), 0.367879441);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 2,  1)), 0.082084999);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -1)), textureOffset(depth, texcoord, ivec2(-2, -1)), 0.082084999);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-1, -1)), textureOffset(depth, texcoord, ivec2(-1, -1)), 0.367879441);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 0, -1)), textureOffset(depth, texcoord, ivec2( 0, -1)), 0.60653066);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 1, -1)), textureOffset(depth, texcoord, ivec2( 1, -1)), 0.367879441);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 2, -1)), textureOffset(depth, texcoord, ivec2( 2, -1)), 0.082084999);
+  
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2,  0)), textureOffset(depth, texcoord, ivec2(-2,  0)), 0.135335283);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-1,  0)), textureOffset(depth, texcoord, ivec2(-1,  0)), 0.60653066);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 1,  0)), textureOffset(depth, texcoord, ivec2( 1,  0)), 0.60653066);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 2,  0)), textureOffset(depth, texcoord, ivec2( 2,  0)), 0.135335283);
 
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-2,  2)), 0.018315639);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2(-1,  2)), 0.082084999);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 0,  2)), 0.135335283);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 1,  2)), 0.082084999);
-  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2, -2)), textureOffset(depth, texcoord, ivec2( 2,  2)), 0.018315639);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2,  1)), textureOffset(depth, texcoord, ivec2(-2,  1)), 0.082084999);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-1,  1)), textureOffset(depth, texcoord, ivec2(-1,  1)), 0.367879441);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 0,  1)), textureOffset(depth, texcoord, ivec2( 0,  1)), 0.60653066);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 1,  1)), textureOffset(depth, texcoord, ivec2( 1,  1)), 0.367879441);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 2,  1)), textureOffset(depth, texcoord, ivec2( 2,  1)), 0.082084999);
+
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-2,  2)), textureOffset(depth, texcoord, ivec2(-2,  2)), 0.018315639);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2(-1,  2)), textureOffset(depth, texcoord, ivec2(-1,  2)), 0.082084999);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 0,  2)), textureOffset(depth, texcoord, ivec2( 0,  2)), 0.135335283);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 1,  2)), textureOffset(depth, texcoord, ivec2( 1,  2)), 0.082084999);
+  f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 2,  2)), textureOffset(depth, texcoord, ivec2( 2,  2)), 0.018315639);
 
   vec3 smoothed = csum / wsum;
 
