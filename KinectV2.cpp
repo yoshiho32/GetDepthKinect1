@@ -8,6 +8,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include "glm/glm.hpp"
 
 // Kinect 関連
 #pragma comment(lib, "Kinect20.lib")
@@ -15,7 +16,9 @@
 // 計測不能点のデフォルト距離
 const GLfloat maxDepth(10.0f);
 
-#define filename "result.txt"
+#define filename "result2.txt"
+#define POINT_POS 10000
+const float variance = 0.01;
 
 // コンストラクタ
 KinectV2::KinectV2()
@@ -99,6 +102,21 @@ KinectV2::~KinectV2()
 }
 
 
+// 重み付き画素値の合計と重みの合計を求める
+void f(glm::vec3 *csum, glm::vec3 *wsum, const glm::vec3 base, const glm::vec3 c, const glm::vec4 color, const float w)
+{
+	float step = 1.0;
+	if (c.x < 0.1) step = 0.0;
+	float step2 = 1.0;
+	if (base.r < 0.1) step2 = 0.0;
+
+	glm::vec3 d = glm::vec3(abs(color.x - base.x), abs(color.y - base.y), abs(color.z - base.z));
+	glm::vec3 e = glm::vec3(exp(d.x * d.x / variance * (float)(-0.5)) * w + exp(d.y * d.y / variance * (float)(-0.5)) * w + exp(d.z * d.z / variance * (float)(-0.5)) * w, 0, 0);
+	csum[0] += c.x * e.x * step * step2;
+	wsum[0] += e.x * step * step2;
+    //std::cout <<color.x <<"  "<<base.x << std::endl;
+
+}
 
 // デプスデータを取得する
 GLuint KinectV2::getDepth()
@@ -132,11 +150,65 @@ GLuint KinectV2::getDepth()
 		coordinateMapper->MapDepthFrameToColorSpace(depthCount, depthBuffer, depthCount, texcoord);
 		glUnmapBuffer(GL_ARRAY_BUFFER);
 
+		IColorFrame *colorFrame;
+
+		if (colorReader->AcquireLatestFrame(&colorFrame) == S_OK)
+		{
+			
+			// カラーデータを取得して RGBA 形式に変換する
+			colorFrame->CopyConvertedFrameDataToArray(colorCount * 4,
+				static_cast<BYTE *>(color), ColorImageFormat::ColorImageFormat_Bgra);
+
+			// カラーフレームを開放する
+			colorFrame->Release();
+			//なぜかカラーがトレない
+
+		}
+
+
+		glm::vec3 csum = glm::vec3(depthBuffer[POINT_POS], 0, 0);
+		glm::vec3 wsum = glm::vec3(1.0);
+		glm::vec3 base = glm::vec3((float)color[POINT_POS * 4],(float)color[POINT_POS * 4  + 1],(float)color[POINT_POS * 4  + 2]);
+
+		int Miss_num = 0;
+		//glm::vec3(color[ POINT_POS * 4  - 8 - 8 * depthHeight], 0, 0);
+		//std::cout << (float)color[POINT_POS * 4 - 8 - 8 * depthHeight]<< " " <<(float)color[POINT_POS * 4 - 8 - 8 * depthHeight]<<" "<< (float)color[POINT_POS * 4 - 8 - 8 * depthHeight + 2] << std::endl;
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 2 - 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 8 - 8 * depthHeight], (float)color[POINT_POS * 4  - 8 - 8 * depthHeight + 1], (float)color[POINT_POS * 4  - 8 - 8 * depthHeight + 2], 0), 0.018315639);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 1 - 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 4 - 8 * depthHeight], (float)color[POINT_POS * 4  - 4 - 8 * depthHeight + 1], (float)color[POINT_POS * 4  - 4 - 8 * depthHeight + 2], 0), 0.082084999);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS     - 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4      - 8 * depthHeight], (float)color[POINT_POS * 4      - 8 * depthHeight + 1], (float)color[POINT_POS * 4      - 8 * depthHeight + 2], 0), 0.135335283);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 1 - 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 4 - 8 * depthHeight], (float)color[POINT_POS * 4  + 4 - 8 * depthHeight + 1], (float)color[POINT_POS * 4  + 4 - 8 * depthHeight + 2], 0), 0.082084999);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 2 - 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 8 - 8 * depthHeight], (float)color[POINT_POS * 4  + 8 - 8 * depthHeight + 1], (float)color[POINT_POS * 4  + 8 - 8 * depthHeight + 2], 0), 0.018315639);
+
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 2 - 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 8 - 4 * depthHeight], (float)color[POINT_POS * 4  - 8 - 4 * depthHeight + 1], (float)color[POINT_POS * 4  - 8 - 4 * depthHeight + 2], 0), 0.082084999);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 1 - 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 4 - 4 * depthHeight], (float)color[POINT_POS * 4  - 4 - 4 * depthHeight + 1], (float)color[POINT_POS * 4  - 4 - 4 * depthHeight + 2], 0), 0.367879441);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS     - 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4       -4 * depthHeight], (float)color[POINT_POS * 4      - 4 * depthHeight + 1], (float)color[POINT_POS * 4      - 4 * depthHeight + 2], 0), 0.60653066);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 1 - 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 4 - 4 * depthHeight], (float)color[POINT_POS * 4  + 4 - 4 * depthHeight + 1], (float)color[POINT_POS * 4  + 4 - 4 * depthHeight + 2], 0), 0.367879441);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 2 - 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 8 - 4 * depthHeight], (float)color[POINT_POS * 4  + 8 - 4 * depthHeight + 1], (float)color[POINT_POS * 4  + 8 - 4 * depthHeight + 2], 0), 0.082084999);
+
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 2 - 0 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 8 - 0 * depthHeight], (float)color[POINT_POS * 4  - 8 - 0 * depthHeight + 1], (float)color[POINT_POS * 4  - 8 - 0 * depthHeight + 2], 0), 0.135335283);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 1 - 0 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 4 - 0 * depthHeight], (float)color[POINT_POS * 4  - 4 - 0 * depthHeight + 1], (float)color[POINT_POS * 4  - 4 - 0 * depthHeight + 2], 0),0.60653066);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 1 - 0 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 4 - 0 * depthHeight], (float)color[POINT_POS * 4  + 4 - 0 * depthHeight + 1], (float)color[POINT_POS * 4  + 4 - 0 * depthHeight + 2], 0), 0.60653066);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 2 - 0 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 8 - 0 * depthHeight], (float)color[POINT_POS * 4  - 8 - 0 * depthHeight + 1], (float)color[POINT_POS * 4  + 8 - 0 * depthHeight + 2], 0), 0.135335283);
+
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 2 + 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 8 + 4 * depthHeight], (float)color[POINT_POS * 4  - 8 + 4 * depthHeight + 1], (float)color[POINT_POS * 4  - 8 + 4 * depthHeight + 2], 0), 0.082084999);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 1 + 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 4 + 4 * depthHeight], (float)color[POINT_POS * 4  - 4 + 4 * depthHeight + 1], (float)color[POINT_POS * 4  - 4 + 4 * depthHeight + 2], 0), 0.367879441);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS     + 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4      + 4 * depthHeight], (float)color[POINT_POS * 4      + 4 * depthHeight + 1], (float)color[POINT_POS * 4      + 4 * depthHeight + 2], 0), 0.60653066);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 1 + 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 4 + 4 * depthHeight], (float)color[POINT_POS * 4  + 4 + 4 * depthHeight + 1], (float)color[POINT_POS * 4  + 4 + 4 * depthHeight + 2], 0), 0.367879441);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 2 + 1 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 8 + 4 * depthHeight], (float)color[POINT_POS * 4  + 8 + 4 * depthHeight + 1], (float)color[POINT_POS * 4  + 8 + 4 * depthHeight + 2], 0), 0.082084999);
+
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 2 + 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 8 + 8 * depthHeight], (float)color[POINT_POS * 4  - 8 + 4 * depthHeight + 1], (float)color[POINT_POS * 4  - 8 + 8 * depthHeight + 2], 0), 0.018315639);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS - 1 + 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  - 4 + 8 * depthHeight], (float)color[POINT_POS * 4  - 4 + 4 * depthHeight + 1], (float)color[POINT_POS * 4  - 4 + 8 * depthHeight + 2], 0), 0.082084999);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS     + 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4      + 8 * depthHeight], (float)color[POINT_POS * 4      + 4 * depthHeight + 1], (float)color[POINT_POS * 4      + 8 * depthHeight + 2], 0), 0.135335283);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 1 + 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 4 + 8 * depthHeight], (float)color[POINT_POS * 4  + 4 + 4 * depthHeight + 1], (float)color[POINT_POS * 4  + 4 + 8 * depthHeight + 2], 0), 0.082084999);
+		f(&csum, &wsum, base, glm::vec3(depthBuffer[POINT_POS + 2 + 2 * depthHeight], 0, 0), glm::vec4((float)color[POINT_POS * 4  + 8 + 8 * depthHeight], (float)color[POINT_POS * 4  + 8 + 4 * depthHeight + 1], (float)color[POINT_POS * 4  + 8 + 8 * depthHeight + 2], 0), 0.018315639);
+
+		float smoothed = csum.x / wsum.x;
+
 		if (counter < 1000) {
 
-			ofs << depthBuffer[1000] << std::endl;
+			ofs << depthBuffer[POINT_POS]<< " " << smoothed << std::endl;
 			counter++;
-			std::cout << counter << std::endl;
+		//	std::cout << csum.r << std::endl;
 
 		}
 		if (counter == 1000) std::cout << "end sampling" << std::endl;
@@ -146,6 +218,7 @@ GLuint KinectV2::getDepth()
 
 		// デプスフレームを開放する
 		depthFrame->Release();
+		
 	}
 
 	ofs.close();
@@ -246,18 +319,6 @@ GLuint KinectV2::getColor() const
 		// カラーデータを取得して RGBA 形式に変換する
 		colorFrame->CopyConvertedFrameDataToArray(colorCount * 4,
 			static_cast<BYTE *>(color), ColorImageFormat::ColorImageFormat_Bgra);
-
-		/*
-		// デプスデータのサイズと格納場所を得る
-		UINT depthSize;
-		UINT16 *depthBuffer;
-		depthFrame->AccessUnderlyingBuffer(&depthSize, &depthBuffer);
-
-		//カラーデータをデプス座標系に合わせる
-
-		coordinateMapper->MapColorFrameToDepthSpace(
-		depthCount, &depthBuffer[0], DepthSpacePoint, &depthSpace[0]);
-		*/
 
 		// カラーフレームを開放する
 		colorFrame->Release();

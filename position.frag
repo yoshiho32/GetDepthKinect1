@@ -86,7 +86,7 @@ void main()
 
   vec3 smoothed = csum / wsum;
 
-  float z = smoothed.r > 0 ? smoothed.r * DEPTH_SCALE : DEPTH_MAXIMUM;
+  float z = smoothed.r > 0 ? (smoothed.r + smoothed.g + smoothed.b) * DEPTH_SCALE : DEPTH_MAXIMUM;
 
   // デプス値からカメラ座標値を求める
   position = vec3((texcoord - 0.5 )* scale * z, z);

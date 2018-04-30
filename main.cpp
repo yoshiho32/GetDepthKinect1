@@ -27,11 +27,12 @@
 #define GENERATE_POSITION 1
 
 //ÀŒ±Œ‹‰Ê‚Ì•Û‘¶æ
-#define filename "result.txt"
+#define filename "result2.txt"
 #define WRITE_NUM 1000
 
 
 std::vector<std::string> datalog;
+
 
 //
 // ƒƒCƒ“ƒvƒƒOƒ‰ƒ€

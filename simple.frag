@@ -53,7 +53,7 @@ void f(inout vec3 csum, inout vec3 wsum, const in vec3 base, const in vec4 color
 void main(void)
 {
 
-/*
+
   vec3 csum = texture(depth, texcoord).xyz;
   vec3 wsum = vec3(1.0);
   vec3 base = texture(color, colorcoord).xyz;
@@ -89,15 +89,17 @@ void main(void)
   f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 1,  2)), textureOffset(depth, texcoord, ivec2( 1,  2)), 0.082084999);
   f(csum, wsum, base, textureOffset(color, colorcoord, ivec2( 2,  2)), textureOffset(depth, texcoord, ivec2( 2,  2)), 0.018315639);
 
-  vec3 smoothed = csum / wsum *50;
-  */
+  vec3 smoothed = csum / wsum;
+  
   //法線ベクトルｖが出てるけどどうやって見えるようにするか考え中
   //float gray = dot(texture(depth, texcoord).rgb*50, vec3(0.299, 0.587, 0.114));
   //float gray = dot(smoothed, vec3(0.299, 0.587, 0.114));
+  //float gray = (smoothed.r + smoothed.g + smoothed.b) * 50/3;
   // テクスチャマッピングを行って陰影を求める
   //fc = idiff + ispec;
   //fc = texture(color, texcoord);
   //fc = vec4(csum,1.0);
-  //fc = vec4(gray, gray, gray, texture(color, texcoord).a) * idiff + ispec;
+  //fc = vec4(gray, gray, gray, texture(color, texcoord).a);// * idiff + ispec;
   fc = texture(color, texcoord) * idiff + ispec;
+
 }
