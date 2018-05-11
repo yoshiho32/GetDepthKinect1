@@ -13,50 +13,44 @@
 
 class KinectV2 : public DepthCamera
 {
-	// センサの識別子
-	static IKinectSensor *sensor;
+  // センサの識別子
+  static IKinectSensor *sensor;
 
-	// デプスデータからカメラ座標を求めるときに用いる一時メモリ
-	GLfloat(*position)[3];
+  // デプスデータ
+  IDepthFrameReader *depthReader;
 
-	// カラーデータ
-	IColorFrameReader *colorReader;
+  // デプスデータからカメラ座標を求めるときに用いる一時メモリ
+  GLfloat(*position)[3];
 
-	// カラーデータの変換に用いる一時メモリ
-	GLubyte *color;
+  // カラーデータ
+  IColorFrameReader *colorReader;
 
-	// 座標のマッピング
-	ICoordinateMapper *coordinateMapper;
+  // カラーデータの変換に用いる一時メモリ
+  GLubyte *color;
 
-	// コピーコンストラクタ (コピー禁止)
-	KinectV2(const KinectV2 &w);
+  // 座標のマッピング
+  ICoordinateMapper *coordinateMapper;
 
-	// 代入 (代入禁止)
-	KinectV2 &operator=(const KinectV2 &w);
+  // コピーコンストラクタ (コピー禁止)
+  KinectV2(const KinectV2 &w);
+
+  // 代入 (代入禁止)
+  KinectV2 &operator=(const KinectV2 &w);
 
 public:
 
-	int counter;
+  // コンストラクタ
+  KinectV2();
 
-	// デプスデータ
-	IDepthFrameReader *depthReader;
+  // デストラクタ
+  virtual ~KinectV2();
 
-	// コンストラクタ
-	KinectV2();
+  // デプスデータを取得する
+  GLuint getDepth() const;
 
-	// デストラクタ
-	virtual ~KinectV2();
+  // カメラ座標を取得する
+  GLuint getPoint() const;
 
-	// デプスデータを取得する
-	GLuint getDepth();
-
-	// カメラ座標を取得する
-	GLuint getPoint() const;
-
-	// カラーデータを取得する
-	GLuint getColor() const;
-
-	// デプスデータの一つを取得する
-	//GLuint takeOneDepth() const;
-
+  // カラーデータを取得する
+  GLuint getColor() const;
 };

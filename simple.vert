@@ -23,7 +23,6 @@ uniform mat4 mg;                                    // 法線ベクトルの変換行列
 layout (location = 0) uniform sampler2D position;   // 頂点位置のテクスチャ
 layout (location = 1) uniform sampler2D normal;     // 法線ベクトルのテクスチャ
 layout (location = 2) uniform sampler2D color;      // カラーのテクスチャ
-layout (location = 3) uniform sampler2D depth;      // カラーのテクスチャ
 
 // 頂点属性
 layout (location = 0) in vec2 pc;                   // 頂点のテクスチャ座標
@@ -46,27 +45,16 @@ void main(void)
   vec4 p = mw * pv;                                 // 視点座標系の頂点の位置
   vec4 q = pl;                                      // 視点座標系の光源の位置
   vec3 v = normalize(p.xyz / p.w);                  // 視線ベクトル
-
-  // テクスチャ座標
-  texcoord = cc / vec2(textureSize(color, 0));
-
-  vec3 dxyz = vec3( (textureOffset(depth, texcoord, ivec2( 1, 0)).r - textureOffset(depth, texcoord, ivec2(-1, 0)).r ) /2,
-                    (textureOffset(depth, texcoord, ivec2( 0, 1)).r - textureOffset(depth, texcoord, ivec2( 0,-1)).r ) /2,
-					1.0 );
-
-  vec4 v2 = vec4(normalize(dxyz), 1.0);
-
-
   vec3 l = normalize((q * p.w - p * q.w).xyz);      // 光線ベクトル
-  vec3 n = normalize((mg * v2).xyz);                // 法線ベクトル
+  vec3 n = normalize((mg * nv).xyz);                // 法線ベクトル
   vec3 h = normalize(l - v);                        // 中間ベクトル
-
-
 
   // 陰影計算
   idiff = max(dot(n, l), 0.0) * kdiff * ldiff + kamb * lamb;
   ispec = pow(max(dot(n, h), 0.0), kshi) * kspec * lspec;
 
+  // テクスチャ座標
+  texcoord = cc / vec2(textureSize(color, 0));
 
   // クリッピング座標系における座標値
   gl_Position = mc * pv;
