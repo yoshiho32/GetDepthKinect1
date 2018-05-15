@@ -32,6 +32,7 @@ layout (location = 1) in vec2 cc;                   // カラーのテクスチャ座標
 out vec4 idiff;                                     // 拡散反射光強度
 out vec4 ispec;                                     // 鏡面反射光強度
 out vec2 texcoord;                                  // テクスチャ座標
+out vec2 texcoord_value;
 
 void main(void)
 {
@@ -55,6 +56,7 @@ void main(void)
 
   // テクスチャ座標
   texcoord = cc / vec2(textureSize(color, 0));
+  texcoord_value = vec2(1.0) / vec2(textureSize(color, 0));
 
   // クリッピング座標系における座標値
   gl_Position = mc * pv;
