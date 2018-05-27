@@ -17,6 +17,9 @@
 // 計算に用いるシェーダ
 #include "Calculate.h"
 
+//カルマンフィルターの計算に用いるコンピュートシェーダ
+#include "ComputeShader.h"
+
 // 頂点位置の生成をシェーダ (position.frag) で行うなら 1
 #define GENERATE_POSITION 1
 
@@ -37,8 +40,8 @@ int main()
   atexit(glfwTerminate);
 
   // OpenGL Version 3.2 Core Profile を選択する
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -76,6 +79,15 @@ int main()
   // 頂点位置から法線ベクトルを計算するシェーダ
   const Calculate normal(width, height, "normal.frag");
 
+  //カルマンフィルター用のコンピュートシェーダ
+  ComputeShader kalman(width, height, "kalman.comp");
+
+  //カルマンフィルタ用変数
+  const float Q(0.0001f); 
+  const float R(0.01f);
+  float P(0.0f);
+  float K(0.0f);
+
   // 背景色を設定する
   glClearColor(background[0], background[1], background[2], background[3]);
 
@@ -87,12 +99,39 @@ int main()
   while (!window.shouldClose())
   {
 #if GENERATE_POSITION
+
+
+	//カルマンフィルターの計算
+	// カルマンフィルター用変数の計算
+	K = (P + Q) / (P + Q + R);
+	P = R * (P + Q) / (R + P + Q);
+
+	kalman.use();
+	//フィルターのvboにデータを入れる
+
+	//テクスチャの設定
+	glActiveTexture(GL_TEXTURE0);
+	glBindImageTexture(0, kalman.tex_output, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	//uniform変数の設定
+	glUniform1i(1, 1);
+	glActiveTexture(GL_TEXTURE1);
+	sensor.getDepth();
+
+	//uniform変数KとしてGPUにデータを渡す
+	glUniform1f(glGetUniformLocation(kalman.setprogram(), "K"), K);
+
+	//処理をする、データはkalman.tex_outputでアクセスする
+	kalman.calculate();
+
     // 頂点位置の計算
     position.use();
     glUniform1i(0, 0);
     glActiveTexture(GL_TEXTURE0);
     sensor.getDepth();
-    const std::vector<GLuint> &positionTexture(position.calculate());
+	//glBindImageTexture(0, kalman.tex_output, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	const std::vector<GLuint> &positionTexture(position.calculate());
 
     // 法線ベクトルの計算
     normal.use();

@@ -1,0 +1,53 @@
+#version 430 core
+#define MILLIMETER 0.001
+#define DEPTH_SCALE (-65535.0 * MILLIMETER)
+#define DEPTH_MAXIMUM (-10.0)
+
+//コンピュートシェーダー上のカーネルサイズ
+layout(local_size_x = 1, local_size_y = 1) in;
+
+//計算結果出力用
+layout(rgba32f, binding = 0) uniform image2D tex_output;
+
+//現在のデプスデータ
+layout (location = 1) uniform sampler2D depth;
+
+//以前のデプスデータを保持してsampler2Dとしてアクセスする必要がある
+//layout (location = 2) uniform sampler2D depth_old;こんな感じかな
+
+//カルマンフィルタの処理用
+//深度の範囲 取ってやる必要があるかも？現状は決め打ち
+vec2 range = vec2(100, 7000);
+
+//カルマンフィルターの係数
+uniform float K;
+
+void main(){
+	//gl_GlobalInvocationIDでカーネル的に現在地が取れる
+	ivec2 texcoord = ivec2(gl_GlobalInvocationID.xy);
+
+	//以前の頂点位置
+	vec4 pp = texture(depth/*変更必要箇所*/, texcoord);
+
+	//現在の頂点位置
+	vec4 pv = texture(depth,texcoord);
+
+	//計算結果保存用
+	vec4 po = vec4(1.0,1.0,1.0,1.0);
+
+	//カルマンフィルタ処理
+	if (pv.r > range.s && pv.r < range.t)
+	{
+	if (pp.z > 0.0)
+	 	po = pp + (pv - pp) * K;
+	else
+		po = pv;
+	}
+	else
+	{
+		po = pp;
+	}
+
+	//tex_outputのtexcoordの位置にpoを入れる
+	imageStore(tex_output, texcoord, po);
+}

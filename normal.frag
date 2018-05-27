@@ -1,6 +1,4 @@
-#version 150 core
-#extension GL_ARB_explicit_attrib_location : enable
-#extension GL_ARB_explicit_uniform_location : enable
+#version 430 core
 
 // テクスチャ
 layout (location = 0) uniform sampler2D position;
