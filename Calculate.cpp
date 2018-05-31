@@ -17,6 +17,7 @@ Calculate::Calculate(int width, int height, const char *source, int uniforms, in
 
   for (int i = 0; i < targets; ++i)
   {
+
     // フレームバッファオブジェクトのターゲットに使うテクスチャを作成する
     GLuint tex;
     glGenTextures(1, &tex);

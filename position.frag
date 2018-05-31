@@ -12,7 +12,8 @@ const vec2 scale = vec2(
 );
 
 // テクスチャ
-layout (location = 0) uniform sampler2D depth;
+layout (location = 0) uniform sampler2D depth1;
+layout (location = 1) uniform sampler2D depth;
 layout (location = 2) uniform sampler2D color;      // カラーのテクスチャ
 
 // テクスチャ座標

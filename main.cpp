@@ -87,6 +87,8 @@ int main()
   const float R(0.01f);
   float P(0.0f);
   float K(0.0f);
+  GLint KLoc = glGetUniformLocation(kalman.setprogram(), "K");
+  int SwitchKalman(0);
 
   // 背景色を設定する
   glClearColor(background[0], background[1], background[2], background[3]);
@@ -100,26 +102,50 @@ int main()
   {
 #if GENERATE_POSITION
 
-
 	//カルマンフィルターの計算
 	// カルマンフィルター用変数の計算
 	K = (P + Q) / (P + Q + R);
 	P = R * (P + Q) / (R + P + Q);
 
 	kalman.use();
-	//フィルターのvboにデータを入れる
-
-	//テクスチャの設定
-	glActiveTexture(GL_TEXTURE0);
-	glBindImageTexture(0, kalman.tex_output, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-
-	//uniform変数の設定
-	glUniform1i(1, 1);
-	glActiveTexture(GL_TEXTURE1);
-	sensor.getDepth();
 
 	//uniform変数KとしてGPUにデータを渡す
-	glUniform1f(glGetUniformLocation(kalman.setprogram(), "K"), K);
+	glUniform1f(KLoc, K);
+
+	//uniform変数の設定
+	glUniform1i(0, 0);
+	//depthデータの転送
+	glActiveTexture(GL_TEXTURE0);
+	sensor.getDepth();
+
+	//以前のデプスデータが入っている場所
+	glUniform1i(1, 1);
+	glActiveTexture(GL_TEXTURE1);
+
+	//テクスチャを入れ替えて計算する
+	if (SwitchKalman) {
+		//テクスチャの設定
+		glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
+		
+		//計算結果が入っている場所
+		glUniform1i(2, 2);
+		glActiveTexture(GL_TEXTURE2);
+		glBindImageTexture(2, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+		//std::cout << "A" << std::endl;
+
+	}
+	else {
+		//テクスチャの設定
+		glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
+
+		//計算結果が入っている場所
+		glUniform1i(2, 2);
+		glActiveTexture(GL_TEXTURE2);
+		glBindImageTexture(2, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+		//std::cout << "B" << std::endl;
+	}
+	
 
 	//処理をする、データはkalman.tex_outputでアクセスする
 	kalman.calculate();
@@ -128,8 +154,21 @@ int main()
     position.use();
     glUniform1i(0, 0);
     glActiveTexture(GL_TEXTURE0);
-    sensor.getDepth();
-	//glBindImageTexture(0, kalman.tex_output, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+    //sensor.getDepth();
+
+	//交互に入ってる場所を参照して、計算した予測位置を渡す
+	if (SwitchKalman) {
+		glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
+		SwitchKalman++;
+	}
+	else {
+		glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
+		SwitchKalman--;
+	}
+
+	glUniform1i(1, 1);
+	glActiveTexture(GL_TEXTURE1);
+	sensor.getDepth();
 
 	const std::vector<GLuint> &positionTexture(position.calculate());
 
@@ -139,6 +178,7 @@ int main()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
     const std::vector<GLuint> &normalTexture(normal.calculate());
+
 #else
     // 法線ベクトルの計算
     normal.use();
@@ -162,6 +202,7 @@ int main()
     glUniform1i(0, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
+
 #endif
     glUniform1i(1, 1);
     glActiveTexture(GL_TEXTURE1);

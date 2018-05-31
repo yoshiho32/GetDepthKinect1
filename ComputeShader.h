@@ -33,7 +33,8 @@ public:
 
 
 	//コンピュートシェーダーの計算結果が入るtexture
-	GLuint tex_output;
+	GLuint tex_A;
+	GLuint tex_B;
 
 	//インストラクタ
 	ComputeShader(int width, int height, const char *source, int uniforms = 1, int targets = 1);
