@@ -126,11 +126,10 @@ int main()
 	if (SwitchKalman) {
 		//テクスチャの設定
 		glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
-		
+
 		//計算結果が入っている場所
-		glUniform1i(2, 2);
-		glActiveTexture(GL_TEXTURE2);
 		glBindImageTexture(2, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
 
 		//std::cout << "A" << std::endl;
 
@@ -140,12 +139,9 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
 
 		//計算結果が入っている場所
-		glUniform1i(2, 2);
-		glActiveTexture(GL_TEXTURE2);
 		glBindImageTexture(2, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 		//std::cout << "B" << std::endl;
 	}
-	
 
 	//処理をする、データはkalman.tex_outputでアクセスする
 	kalman.calculate();
@@ -154,18 +150,18 @@ int main()
     position.use();
     glUniform1i(0, 0);
     glActiveTexture(GL_TEXTURE0);
-    //sensor.getDepth();
 
 	//交互に入ってる場所を参照して、計算した予測位置を渡す
 	if (SwitchKalman) {
 		glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
-		SwitchKalman++;
+		SwitchKalman--;
 	}
 	else {
 		glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
-		SwitchKalman--;
+		SwitchKalman++;
 	}
 
+	//確認用にデプスを渡す
 	glUniform1i(1, 1);
 	glActiveTexture(GL_TEXTURE1);
 	sensor.getDepth();

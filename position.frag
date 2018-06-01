@@ -11,9 +11,9 @@ const vec2 scale = vec2(
   1.222434
 );
 
-// テクスチャ
-layout (location = 0) uniform sampler2D depth1;
-layout (location = 1) uniform sampler2D depth;
+// テクスチャ　depthを参照してるので交互に入れ替えたりして
+layout (location = 0) uniform sampler2D depth;
+layout (location = 1) uniform sampler2D depth1;
 layout (location = 2) uniform sampler2D color;      // カラーのテクスチャ
 
 // テクスチャ座標
@@ -27,7 +27,7 @@ layout (location = 0) out vec3 position;
 // 閾値
 const float threshold = 0.1 * MILLIMETER;
 
-//分散 -- フィルタの強度の指定らしい
+//分散 -- フィルタの強度の指定
 const float variance = 0.05;
 
 // 閾値処理
