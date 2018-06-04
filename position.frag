@@ -1,5 +1,4 @@
 #version 430 core
-#extension GL_NV_shader_buffer_load : enable
 
 #define MILLIMETER 0.001
 #define DEPTH_SCALE (-65535.0 * MILLIMETER)
@@ -51,12 +50,14 @@ void main()
 
   vec3 csum = texture(depth, texcoord).xyz;
   vec3 wsum = vec3(1.0);
+
   //ジョイントバイラテラルフィルタの色の重み用のベースカラー
   vec3 base = texture(color, texcoord).xyz;
-  
+
   int Miss_num = 0;
   vec2 texcoord_value2 = vec2(1.0, 1.0);
-
+ 
+  
   f(csum, wsum, base, textureOffset(color, texcoord, ivec2(-2 * texcoord_value.r , -2 * texcoord_value.g)), textureOffset(depth, texcoord, ivec2(-2, -2)), 0.018315639);
   f(csum, wsum, base, textureOffset(color, texcoord, ivec2(-1 * texcoord_value.r , -2 * texcoord_value.g)), textureOffset(depth, texcoord, ivec2(-1, -2)), 0.082084999);
   f(csum, wsum, base, textureOffset(color, texcoord, ivec2( 0 * texcoord_value.r , -2 * texcoord_value.g)), textureOffset(depth, texcoord, ivec2( 0, -2)), 0.135335283);

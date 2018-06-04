@@ -34,6 +34,7 @@ Calculate::Calculate(int width, int height, const char *source, int uniforms, in
     // レンダリングターゲットを設定する
     texture.push_back(tex);
     bufs.push_back(GL_COLOR_ATTACHMENT0 + i);
+
   }
 
   // フレームバッファオブジェクトへの描画に使う矩形を作成する
@@ -51,6 +52,7 @@ Calculate::~Calculate()
 
   // フレームバッファオブジェクトへの描画に使う矩形を削除する
   if (--count == 0) delete rectangle;
+
 }
 
 // 計算を実行する

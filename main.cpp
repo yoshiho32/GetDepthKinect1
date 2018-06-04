@@ -119,48 +119,56 @@ int main()
 	sensor.getDepth();
 
 	//以前のデプスデータが入っている場所
-	glUniform1i(1, 1);
+	//glUniform1i(1, 1);
+	//glActiveTexture(GL_TEXTURE1);
+
 	glActiveTexture(GL_TEXTURE1);
 
 	//テクスチャを入れ替えて計算する
 	if (SwitchKalman) {
 		//テクスチャの設定
-		glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
+		//glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
+		glBindImageTexture(1, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
+
+		glActiveTexture(GL_TEXTURE2);
 		//計算結果が入っている場所
-		glBindImageTexture(2, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-
+		glBindImageTexture(2, kalman.tex_A, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 		//std::cout << "A" << std::endl;
 
 	}
 	else {
 		//テクスチャの設定
-		glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
+		//glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
+		glBindImageTexture(1, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
+		glActiveTexture(GL_TEXTURE2);
 		//計算結果が入っている場所
-		glBindImageTexture(2, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+		glBindImageTexture(2, kalman.tex_B, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 		//std::cout << "B" << std::endl;
 	}
 
-	//処理をする、データはkalman.tex_outputでアクセスする
+	//処理の実行
 	kalman.calculate();
 
     // 頂点位置の計算
     position.use();
     glUniform1i(0, 0);
     glActiveTexture(GL_TEXTURE0);
-
+	
 	//交互に入ってる場所を参照して、計算した予測位置を渡す
 	if (SwitchKalman) {
-		glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
+		glBindImageTexture(0, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		//glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
 		SwitchKalman--;
 	}
 	else {
-		glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
+		glBindImageTexture(0, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		//glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
 		SwitchKalman++;
 	}
-
+	
 	//確認用にデプスを渡す
 	glUniform1i(1, 1);
 	glActiveTexture(GL_TEXTURE1);

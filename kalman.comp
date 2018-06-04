@@ -9,11 +9,11 @@ layout(local_size_x = 1, local_size_y = 1) in;
 //現在のデプスデータ
 layout (location = 0) uniform sampler2D depth;
 
-//以前のデプスデータを保持してsampler2Dとしてアクセスする必要がある
-layout (location = 1) uniform sampler2D depth_old;
+//一つ前の計算結果出力用の位置を読み取り、前回のデータにする
+layout (rgba32f, binding = 1) uniform image2D depth_old;
 
 //計算結果出力用
-layout(rgba32f, binding = 2) uniform image2D tex_output;
+layout(rgba32f, binding = 2) uniform writeonly image2D tex_output;
 
 //カルマンフィルタの処理用
 //深度の範囲 取ってやる必要があるかも？現状は決め打ち
@@ -27,7 +27,7 @@ void main(){
 	ivec2 texcoord = ivec2(gl_GlobalInvocationID.xy);
 
 	//以前の頂点位置
-	vec4 pp = texture(depth_old, texcoord);
+	vec4 pp = imageLoad(depth_old, texcoord);
 
 	//現在の頂点位置
 	vec4 pv = texture(depth,texcoord);
@@ -38,18 +38,20 @@ void main(){
 	//カルマンフィルタ処理
 	if (pv.r > range.s && pv.r < range.t)
 	{
-	if (pp.z > 0.0)
-	 	po = pp + (pv - pp) * K;
-	else
-		po = pv;
-	}
+		if (pp.z > 0.0)
+			po = pp + (pv - pp) * K;
+		else
+			po = pv;
+		}
 	else
 	{
 		po = pp;
 	}
 	
+	//po = vec4(-1.0*texcoord.x*texcoord.y,1.0,1.0,1.0);
 
 	//poで問題がでてるっぽい、pvにすると動くっぽい
 	//tex_outputのtexcoordの位置にpoを入れる
 	imageStore(tex_output, texcoord, po);
+
 }
