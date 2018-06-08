@@ -119,7 +119,7 @@ int main()
 	sensor.getDepth();
 
 	//以前のデプスデータが入っている場所
-	//glUniform1i(1, 1);
+	//glUniform1i(1, 1);a
 	//glActiveTexture(GL_TEXTURE1);
 
 	glActiveTexture(GL_TEXTURE1);
