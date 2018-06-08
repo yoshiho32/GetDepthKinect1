@@ -22,6 +22,9 @@ layout (location = 0) uniform sampler2D position;   // 頂点位置のテクスチャ
 layout (location = 1) uniform sampler2D normal;     // 法線ベクトルのテクスチャ
 layout (location = 2) uniform sampler2D color;      // カラーのテクスチャ
 
+//デプスでーた
+layout (location = 3) uniform sampler2D depth;
+
 // 頂点属性
 layout (location = 0) in vec2 pc;                   // 頂点のテクスチャ座標
 layout (location = 1) in vec2 cc;                   // カラーのテクスチャ座標
@@ -36,7 +39,7 @@ void main(void)
 {
   // 頂点位置
   vec4 pv = texture(position, pc);
-
+  
   // 法線ベクトル
   vec4 nv = texture(normal, pc);
 
@@ -46,6 +49,7 @@ void main(void)
   vec3 v = normalize(p.xyz / p.w);                  // 視線ベクトル
   vec3 l = normalize((q * p.w - p * q.w).xyz);      // 光線ベクトル
   vec3 n = normalize((mg * nv).xyz);                // 法線ベクトル
+  
   vec3 h = normalize(l - v);                        // 中間ベクトル
 
   // 陰影計算
@@ -53,8 +57,8 @@ void main(void)
   ispec = pow(max(dot(n, h), 0.0), kshi) * kspec * lspec;
 
   // テクスチャ座標
-  texcoord = cc / vec2(textureSize(color, 0));
   texcoord_value = vec2(1.0) / vec2(textureSize(color, 0));
+  texcoord = cc / vec2(textureSize(color, 0));
 
   // クリッピング座標系における座標値
   gl_Position = mc * pv;

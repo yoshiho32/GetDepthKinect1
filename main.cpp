@@ -154,7 +154,7 @@ int main()
 
     // 頂点位置の計算
     position.use();
-    glUniform1i(0, 0);
+    //glUniform1i(0, 0);
     glActiveTexture(GL_TEXTURE0);
 	
 	//交互に入ってる場所を参照して、計算した予測位置を渡す
@@ -169,18 +169,13 @@ int main()
 		SwitchKalman++;
 	}
 	
-	//確認用にデプスを渡す
-	glUniform1i(1, 1);
-	glActiveTexture(GL_TEXTURE1);
-	sensor.getDepth();
-
 	const std::vector<GLuint> &positionTexture(position.calculate());
 
     // 法線ベクトルの計算
     normal.use();
     glUniform1i(0, 0);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
+	glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
     const std::vector<GLuint> &normalTexture(normal.calculate());
 
 #else
@@ -200,7 +195,7 @@ int main()
     simple.loadMatrix(window.getMp(), window.getMw());
     simple.setLight(light);
     simple.setMaterial(material);
-
+	 
     // テクスチャ
 #if GENERATE_POSITION
     glUniform1i(0, 0);
@@ -214,6 +209,10 @@ int main()
     glUniform1i(2, 2);
     glActiveTexture(GL_TEXTURE2);
     sensor.getColor();
+
+	//glUniform1i(3, 3);
+	glActiveTexture(GL_TEXTURE3);
+	glBindImageTexture(3, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
     // 図形描画
     mesh.draw();
