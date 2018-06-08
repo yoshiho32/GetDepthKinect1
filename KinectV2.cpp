@@ -211,3 +211,4 @@ GLuint KinectV2::getColor() const
 
 // ƒZƒ“ƒT‚Ì¯•Êq
 IKinectSensor *KinectV2::sensor(NULL);
+

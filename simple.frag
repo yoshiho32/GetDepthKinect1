@@ -2,7 +2,6 @@
 
 // テクスチャ
 layout (location = 2) uniform sampler2D color;      // カラーのテクスチャ
-layout (location = 3) uniform sampler2D depth;
 
 // ラスタライザから受け取る頂点属性の補間値
 in vec4 idiff;                                      // 拡散反射光強度
@@ -14,10 +13,9 @@ layout (location = 0) out vec4 fc;                  // フラグメントの色
 
 void main(void)
 {
-
   // テクスチャマッピングを行って陰影を求める
   //fc = idiff + ispec;
   //fc = texture(color, texcoord);
   fc = texture(color, texcoord) * idiff + ispec;
-  //fc = texture(depth, texcoord)* idiff + ispec;
+
 }
