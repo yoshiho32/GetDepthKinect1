@@ -102,73 +102,62 @@ int main()
   {
 #if GENERATE_POSITION
 
-	//カルマンフィルターの計算
+	//カルマンフィルターの計算ーーーーーーーーーーーーーーーーーーーーー
 	// カルマンフィルター用変数の計算
 	K = (P + Q) / (P + Q + R);
 	P = R * (P + Q) / (R + P + Q);
 
 	kalman.use();
-
 	//uniform変数KとしてGPUにデータを渡す
 	glUniform1f(KLoc, K);
 
-	//uniform変数の設定
-	glUniform1i(0, 0);
 	//depthデータの転送
+	glUniform1i(0, 0);
 	glActiveTexture(GL_TEXTURE0);
 	sensor.getDepth();
 
-	//以前のデプスデータが入っている場所
-	//glUniform1i(1, 1);a
-	//glActiveTexture(GL_TEXTURE1);
-
-	glActiveTexture(GL_TEXTURE1);
-
 	//テクスチャを入れ替えて計算する
+	glActiveTexture(GL_TEXTURE1);
 	if (SwitchKalman) {
 		//テクスチャの設定
-		//glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
 		glBindImageTexture(1, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-
-
+		
+		//計算結果を入れる場所を設定
 		glActiveTexture(GL_TEXTURE2);
-		//計算結果が入っている場所
 		glBindImageTexture(2, kalman.tex_A, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
 		//std::cout << "A" << std::endl;
-
 	}
 	else {
 		//テクスチャの設定
-		//glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
 		glBindImageTexture(1, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
+		//計算結果を入れる場所を設定
 		glActiveTexture(GL_TEXTURE2);
-		//計算結果が入っている場所
 		glBindImageTexture(2, kalman.tex_B, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 		//std::cout << "B" << std::endl;
 	}
-
 	//処理の実行
 	kalman.calculate();
+	//カルマンフィルター終わりーーーーーーーーーーーーーーーーーーー
 
     // 頂点位置の計算
     position.use();
-    //glUniform1i(0, 0);
+
+	//処理済みのデプスデータを渡す
+
     glActiveTexture(GL_TEXTURE0);
-	
 	//交互に入ってる場所を参照して、計算した予測位置を渡す
 	if (SwitchKalman) {
 		glBindImageTexture(0, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-		//glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
-		SwitchKalman--;
 	}
 	else {
 		glBindImageTexture(0, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-		//glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
-		SwitchKalman++;
 	}
 	
+	glUniform1i(2, 2);
+	glActiveTexture(GL_TEXTURE2);
+	sensor.getColor();
+
 	const std::vector<GLuint> &positionTexture(position.calculate());
 
     // 法線ベクトルの計算
@@ -209,11 +198,16 @@ int main()
     glUniform1i(2, 2);
     glActiveTexture(GL_TEXTURE2);
     sensor.getColor();
-
-	//glUniform1i(3, 3);
 	glActiveTexture(GL_TEXTURE3);
-	glBindImageTexture(3, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-
+	//交互に入ってる場所を参照して、計算した予測位置を渡す
+	if (SwitchKalman) {
+		glBindImageTexture(3, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		SwitchKalman--;
+	}
+	else {
+		glBindImageTexture(3, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		SwitchKalman++;
+	}
     // 図形描画
     mesh.draw();
 

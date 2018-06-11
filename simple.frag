@@ -19,5 +19,5 @@ void main(void)
   //fc = idiff + ispec;
   //fc = texture(color, texcoord);
   fc = texture(color, texcoord) * idiff + ispec;
-  //fc = texture(depth, texcoord)* idiff + ispec;
+  //fc = texture(depth, texcoord);//* idiff + ispec;
 }

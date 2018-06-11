@@ -10,7 +10,7 @@ layout(local_size_x = 1, local_size_y = 1) in;
 layout (location = 0) uniform sampler2D depth;
 
 //一つ前の計算結果出力用の位置を読み取り、前回のデータにする
-layout (rgba32f, binding = 1) uniform image2D depth_old;
+layout (rgba32f, binding = 1) uniform restrict image2D depth_old;
 
 //計算結果出力用
 layout(rgba32f, binding = 2) uniform writeonly image2D tex_output;
@@ -48,9 +48,8 @@ void main(){
 		po = pp;
 	}
 	
-	//po = vec4(-1.0*texcoord.x*texcoord.y,1.0,1.0,1.0);
+	//po = vec4(1.0,1.0,1.0,1.0);
 
-	//poで問題がでてるっぽい、pvにすると動くっぽい
 	//tex_outputのtexcoordの位置にpoを入れる
 	imageStore(tex_output, texcoord, po);
 
