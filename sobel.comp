@@ -1,0 +1,37 @@
+#version 430 core
+
+//コンピュートシェーダー上のカーネルサイズ
+layout(local_size_x = 1, local_size_y = 1) in;
+
+//現在のデプスデータ
+layout (location = 0) uniform sampler2D depth;
+
+//計算結果出力用
+layout(rgba32f, binding = 1) uniform writeonly image2D tex_output;
+
+void main(){
+	//gl_GlobalInvocationIDでカーネル的に現在地が取れる
+	ivec2 texcoord = ivec2(gl_GlobalInvocationID.xy);
+
+	//縦の
+	vec4 result = 
+		   -textureOffset(depth, texcoord, ivec2(-1,-1)) -
+		2 * textureOffset(depth, texcoord, ivec2(-1, 0)) - 
+			textureOffset(depth, texcoord, ivec2(-1, 1)) + 
+			textureOffset(depth, texcoord, ivec2( 1,-1)) + 
+		2 * textureOffset(depth, texcoord, ivec2( 1, 0)) + 
+			textureOffset(depth, texcoord, ivec2( 1, 1)) ;
+	result = result * step(result.r , 40);
+
+	vec4 result2 = 
+		   -textureOffset(depth, texcoord, ivec2(-1,-1)) - 
+		2 * textureOffset(depth, texcoord, ivec2( 0,-1)) - 
+			textureOffset(depth, texcoord, ivec2( 1,-1)) + 
+			textureOffset(depth, texcoord, ivec2(-1, 1)) + 
+		2 * textureOffset(depth, texcoord, ivec2( 0, 1)) + 
+			textureOffset(depth, texcoord, ivec2( 1, 1)) ;
+	result2 = result2 * step(result2.r , 40);
+	//tex_outputのtexcoordの位置にpoを入れる
+	imageStore(tex_output, texcoord,sqrt(result*result+result2*result2));
+
+}

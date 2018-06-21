@@ -22,6 +22,7 @@
 
 // 頂点位置の生成をシェーダ (position.frag) で行うなら 1
 #define GENERATE_POSITION 1
+#define SOBEL_FILTER 0
 
 //
 // メインプログラム
@@ -79,6 +80,11 @@ int main()
   // 頂点位置から法線ベクトルを計算するシェーダ
   const Calculate normal(width, height, "normal.frag");
 
+#ifdef SOBEL_FILTER
+  //微分フィルター用のコンピュートシェーダ
+  ComputeShader sobel(width, height, "sobel.comp");
+#endif
+
   //カルマンフィルター用のコンピュートシェーダ
   ComputeShader kalman(width, height, "kalman.comp");
 
@@ -121,7 +127,6 @@ int main()
 	if (SwitchKalman) {
 		//テクスチャの設定
 		glBindImageTexture(1, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-		
 		//計算結果を入れる場所を設定
 		glActiveTexture(GL_TEXTURE2);
 		glBindImageTexture(2, kalman.tex_A, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
@@ -130,7 +135,6 @@ int main()
 	else {
 		//テクスチャの設定
 		glBindImageTexture(1, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-
 		//計算結果を入れる場所を設定
 		glActiveTexture(GL_TEXTURE2);
 		glBindImageTexture(2, kalman.tex_B, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
@@ -139,6 +143,23 @@ int main()
 	//処理の実行
 	kalman.calculate();
 	//カルマンフィルター終わりーーーーーーーーーーーーーーーーーーー
+
+#ifdef SOBEL_FILTER
+	//微分フィルター
+	sobel.use();
+	glActiveTexture(GL_TEXTURE0);
+	if (SwitchKalman) {
+		glBindImageTexture(0, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	}
+	else {
+		glBindImageTexture(0, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	}
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindImageTexture(1, sobel.tex_A, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+	sobel.calculate();
+#endif
 
     // 頂点位置の計算
     position.use();
@@ -153,7 +174,7 @@ int main()
 	else {
 		glBindImageTexture(0, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 	}
-	
+
 	glUniform1i(2, 2);
 	glActiveTexture(GL_TEXTURE2);
 	sensor.getColor();
@@ -192,12 +213,16 @@ int main()
     glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
 
 #endif
+	//法線ベクトルの受け渡し
     glUniform1i(1, 1);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, normalTexture[0]);
-    glUniform1i(2, 2);
+	//色情報の受け渡し
+	glUniform1i(2, 2);
     glActiveTexture(GL_TEXTURE2);
     sensor.getColor();
+
+	//デプス情報の受け渡し
 	glActiveTexture(GL_TEXTURE3);
 	//交互に入ってる場所を参照して、計算した予測位置を渡す
 	if (SwitchKalman) {
@@ -208,6 +233,12 @@ int main()
 		glBindImageTexture(3, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 		SwitchKalman++;
 	}
+
+#ifdef SOBEL_FILTER
+	glActiveTexture(GL_TEXTURE4);
+	glBindImageTexture(4, sobel.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+#endif
+
     // 図形描画
     mesh.draw();
 

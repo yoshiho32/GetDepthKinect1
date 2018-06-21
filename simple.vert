@@ -24,6 +24,7 @@ layout (location = 2) uniform sampler2D color;      // カラーのテクスチャ
 
 //デプスでーた
 layout (location = 3) uniform sampler2D depth;
+layout (location = 4) uniform sampler2D sobel;
 
 // 頂点属性
 layout (location = 0) in vec2 pc;                   // 頂点のテクスチャ座標

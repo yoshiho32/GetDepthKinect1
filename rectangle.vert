@@ -9,6 +9,7 @@ layout (location = 1) in vec2 cc;                   // カラーのテクスチャ座標
 // テクスチャ座標
 out vec2 texcoord;
 out vec2 colorcoord;
+out vec2 texcoord_value;
 
 void main()
 {
@@ -17,6 +18,8 @@ void main()
 
   // テクスチャ座標
   colorcoord = cc / vec2(textureSize(color, 0));
+  
+  texcoord_value = vec2(1.0) / vec2(textureSize(color, 0));
 
   // 頂点座標をそのまま出力
   gl_Position = pv;

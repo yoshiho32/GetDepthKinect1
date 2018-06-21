@@ -53,7 +53,6 @@ void f(inout vec3 csum, inout vec3 wsum, const in vec3 base, const in vec4 color
 void main()
 {
 
-
 	vec3 csum = texture(depth, texcoord).xyz;
 	vec3 wsum = vec3(1.0);
 
@@ -95,6 +94,6 @@ void main()
   
     //float z = texture(depth, texcoord).r*DEPTH_SCALE;// >0 ? texture(depth, texcoord).r * DEPTH_SCALE : DEPTH_MAXIMUM;
 	// デプス値からカメラ座標値を求める
-	position = vec3((texcoord - 0.5 )* scale * z, z);
+	position = vec3(-(texcoord - 0.5 )* scale, 0);
 
 }

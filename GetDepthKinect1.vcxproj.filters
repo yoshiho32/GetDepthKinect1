@@ -103,5 +103,8 @@
     <None Include="kalman.comp">
       <Filter>シェーダー ファイル</Filter>
     </None>
+    <None Include="sobel.comp">
+      <Filter>シェーダー ファイル</Filter>
+    </None>
   </ItemGroup>
 </Project>
