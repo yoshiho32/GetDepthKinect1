@@ -179,6 +179,7 @@
     <None Include="rectangle.vert" />
     <None Include="simple.frag" />
     <None Include="simple.vert" />
+    <None Include="sobel.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

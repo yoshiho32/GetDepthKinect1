@@ -10,9 +10,8 @@ const vec2 scale = vec2(
   1.222434
 );
 
-// テクスチャ　depthを参照してるので交互に入れ替えたりして
+// テクスチャ
 layout (location = 0) uniform sampler2D depth;
-layout (location = 1) uniform sampler2D depth1;
 layout (location = 2) uniform sampler2D color;      // カラーのテクスチャ
 
 // テクスチャ座標
@@ -36,12 +35,18 @@ vec2 f2(const in float z)
 }
 
 // 重み付き画素値の合計と重みの合計を求める
-void f(inout vec3 csum, inout vec3 wsum, const in vec3 base, const in vec4 color, const in vec4 c, const in float w)
+void f(inout vec3 csum, inout vec3 wsum, const in vec3 base, const in vec4 color, const in vec4 data, const in float weight)
 {
-  vec3 d = color.xyz - base;
-  vec3 e = exp(-0.5 * d * d / variance) * w;
-  csum += c.xyz * e * step(threshold, c.x) * step(threshold, base.r);
-  wsum += e * step(threshold, c.x) * step(threshold, base.r);
+	//まず各RGB値の差をとる
+	vec3 d = color.xyz - base;
+	//次にその差に応じて重み付けを決定し、ガウスによる重み付けを畳み込む
+	//vec3 e = exp(-0.5 * d * d / variance) * weight;
+	float esum = d.x + d.y + d.z;
+	float e = exp(-0.5 * esum * esum / variance ) * weight;
+	//色の合計を足していく
+	csum += data.xyz * e * step(threshold, data.g) * step(threshold, base.r);
+	//csum = data.xyz;
+	wsum += e * step(threshold, data.g) * step(threshold, base.r);
 }
 
 // 重み付き平均を求める
@@ -87,11 +92,11 @@ void main()
   f(csum, wsum, base, textureOffset(color, texcoord, ivec2( 1 * texcoord_value.r ,  2 * texcoord_value.g)), textureOffset(depth, texcoord, ivec2( 1,  2)), 0.082084999);
   f(csum, wsum, base, textureOffset(color, texcoord, ivec2( 2 * texcoord_value.r ,  2 * texcoord_value.g)), textureOffset(depth, texcoord, ivec2( 2,  2)), 0.018315639);
 
-  vec3 smoothed = csum / wsum;
- // float tex = texture(depth, texcoord).r > 0 ? texture(depth, texcoord).r * DEPTH_SCALE : DEPTH_MAXIMUM;
-  float z = smoothed.r > 0 ? (smoothed.r + smoothed.g + smoothed.b) * DEPTH_SCALE : DEPTH_MAXIMUM;
-
-  // デプス値からカメラ座標値を求める
-  position = vec3((texcoord - 0.5 )* scale * z, z);
-
+	vec3 smoothed = csum / wsum;
+	// float tex = texture(depth, texcoord).r > 0 ? texture(depth, texcoord).r * DEPTH_SCALE : DEPTH_MAXIMUM;
+	float z = smoothed.r > 0 ? (smoothed.r + smoothed.g + smoothed.b) * DEPTH_SCALE : DEPTH_MAXIMUM;
+  
+    //float z = texture(depth, texcoord).r*DEPTH_SCALE;// >0 ? texture(depth, texcoord).r * DEPTH_SCALE : DEPTH_MAXIMUM;
+	// デプス値からカメラ座標値を求める
+	position = vec3(-(texcoord - 0.5 )* scale, 0);
 }
