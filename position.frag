@@ -12,6 +12,9 @@ const vec2 scale = vec2(
 
 // テクスチャ
 layout (location = 0) uniform sampler2D depth;
+
+layout (location = 1) uniform sampler2D depths;
+
 layout (location = 2) uniform sampler2D color;      // カラーのテクスチャ
 
 // テクスチャ座標
@@ -98,5 +101,5 @@ void main()
   
     //float z = texture(depth, texcoord).r*DEPTH_SCALE;// >0 ? texture(depth, texcoord).r * DEPTH_SCALE : DEPTH_MAXIMUM;
 	// デプス値からカメラ座標値を求める
-	position = vec3(-(texcoord - 0.5 )* scale, 0);
+	position = vec3((texcoord - 0.5 )* scale*z, z);
 }

@@ -24,6 +24,8 @@
 #define GENERATE_POSITION 1
 #define SOBEL_FILTER 0
 
+#define WINDOW_SCALE 3
+
 //
 // メインプログラム
 //
@@ -47,7 +49,7 @@ int main()
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   // ウィンドウを開く
-  Window window(640, 480, "Depth Map Viewer");
+  Window window(640*WINDOW_SCALE, 480*WINDOW_SCALE, "Depth Map Viewer");
   if (!window.get())
   {
     // ウィンドウが作成できなかった
@@ -144,28 +146,35 @@ int main()
 	kalman.calculate();
 	//カルマンフィルター終わりーーーーーーーーーーーーーーーーーーー
 
-#ifdef SOBEL_FILTER
+#if SOBEL_FILTER
 	//微分フィルター
 	sobel.use();
+	glUniform1i(0, 0);
 	glActiveTexture(GL_TEXTURE0);
 	if (SwitchKalman) {
-		glBindImageTexture(0, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		glBindTexture(GL_TEXTURE_2D,kalman.tex_A);
+		//glBindImageTexture(0, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 	}
 	else {
-		glBindImageTexture(0, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		glBindTexture(GL_TEXTURE_2D,kalman.tex_B);
+		//glBindImageTexture(0, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 	}
 
+	glUniform1i(1, 1);
 	glActiveTexture(GL_TEXTURE1);
-	glBindImageTexture(1, sobel.tex_A, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	glBindTexture(GL_TEXTURE_2D, sobel.tex_A);
+	//glBindImageTexture(1, sobel.tex_A, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	sobel.calculate();
+#else
+	
 #endif
 
     // 頂点位置の計算
     position.use();
 
 	//処理済みのデプスデータを渡す
-
+	
     glActiveTexture(GL_TEXTURE0);
 	//交互に入ってる場所を参照して、計算した予測位置を渡す
 	if (SwitchKalman) {
@@ -174,7 +183,6 @@ int main()
 	else {
 		glBindImageTexture(0, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 	}
-	
 	//確認用にデプスを渡す
 	glUniform1i(1, 1);
 	glActiveTexture(GL_TEXTURE1);
@@ -220,22 +228,35 @@ int main()
     glBindTexture(GL_TEXTURE_2D, normalTexture[0]);
 	//色情報の受け渡し
 	glUniform1i(2, 2);
-    glActiveTexture(GL_TEXTURE2);
-    sensor.getColor();
+	glActiveTexture(GL_TEXTURE2);
+	sensor.getColor();
 
+	glUniform1i(3, 3);
+	glActiveTexture(GL_TEXTURE3);
+	sensor.getDepth();
+
+	
+	std::cout << "b" << std::endl;
+	ggError(__FILE__,__LINE__);
+	std::cout << "a" << std::endl;
+
+	/*
 	//デプス情報の受け渡し
+	glUniform1i(3, 3);
 	glActiveTexture(GL_TEXTURE3);
 	//交互に入ってる場所を参照して、計算した予測位置を渡す
 	if (SwitchKalman) {
-		glBindImageTexture(3, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		glBindTexture(GL_TEXTURE_2D, kalman.tex_A);
+		//glBindImageTexture(3, kalman.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 		SwitchKalman--;
 	}
 	else {
-		glBindImageTexture(3, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		glBindTexture(GL_TEXTURE_2D, kalman.tex_B);
+		//glBindImageTexture(3, kalman.tex_B, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 		SwitchKalman++;
 	}
-
-#ifdef SOBEL_FILTER
+	*/
+#if SOBEL_FILTER
 	glActiveTexture(GL_TEXTURE4);
 	glBindImageTexture(4, sobel.tex_A, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 #endif

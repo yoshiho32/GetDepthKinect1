@@ -5010,7 +5010,7 @@ void gg::ggInit()
 **
 **   \param msg エラー発生時に標準エラー出力に出力する文字列. NULL なら何も出力しない.
 */
-void gg::ggError(const char *msg)
+void gg::ggError(const char *msg, unsigned int line)
 {
   const GLenum error(glGetError());
 

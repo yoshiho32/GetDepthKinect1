@@ -2540,7 +2540,7 @@ namespace gg
   **
   **   \param msg エラー発生時に標準エラー出力に出力する文字列. NULL なら何も出力しない.
   */
-  extern void ggError(const char *msg = NULL);
+  extern void ggError(const char *msg = NULL, unsigned int line = 0);
 
   /*!
   ** \brief FBO のエラーをチェックする.
