@@ -24,7 +24,7 @@
 #define GENERATE_POSITION 1
 #define SOBEL_FILTER 0
 
-#define WINDOW_SCALE 3
+#define WINDOW_SCALE 1
 
 //
 // メインプログラム
@@ -236,9 +236,9 @@ int main()
 	sensor.getDepth();
 
 	
-	std::cout << "b" << std::endl;
+	//std::cout << "b" << std::endl;
 	ggError(__FILE__,__LINE__);
-	std::cout << "a" << std::endl;
+	//std::cout << "a" << std::endl;
 
 	/*
 	//デプス情報の受け渡し

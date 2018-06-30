@@ -1,7 +1,4 @@
 #version 430 core
-#define MILLIMETER 0.001
-#define DEPTH_SCALE (-65535.0 * MILLIMETER)
-#define DEPTH_MAXIMUM (-10.0)
 
 //コンピュートシェーダー上のカーネルサイズ
 layout(local_size_x = 1, local_size_y = 1) in;
@@ -13,7 +10,7 @@ layout (location = 0) uniform sampler2D depth;
 layout (rgba32f, binding = 1) uniform restrict image2D depth_old;
 
 //計算結果出力用
-layout(rgba32f, binding = 2) uniform writeonly image2D tex_output;
+layout (rgba32f, binding = 2) uniform restrict image2D tex_output;
 
 //カルマンフィルタの処理用
 //深度の範囲 取ってやる必要があるかも？現状は決め打ち
